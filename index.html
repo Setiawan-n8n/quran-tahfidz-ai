@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tahfidz & Sanad AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    .font-arabic { font-family: 'Amiri', serif; line-height: 2.2; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col items-center">
+
+  <!-- Bingkai Mobile App -->
+  <div class="w-full max-w-md bg-white min-h-screen shadow-xl flex flex-col justify-between">
+    
+    <!-- Header -->
+    <header class="bg-teal-800 text-white p-4 shadow">
+      <h1 class="text-lg font-bold">Tahfidz & Tahsin Sanad AI</h1>
+      <p class="text-xs text-teal-200">Qari Acuan: Syaikh Mahmud Khalil Al-Hushari (Riwayat Hafs)</p>
+    </header>
+
+    <!-- Konten Utama -->
+    <main class="flex-1 p-4 overflow-y-auto space-y-4">
+
+      <!-- TAB 1: SETORAN AI -->
+      <div id="tab-setoran" class="space-y-4">
+        <div class="bg-white border rounded-2xl p-6 shadow-sm text-center">
+          <span class="text-xs text-gray-400 font-semibold">QS. Al-Fatihah : Ayat 1</span>
+          <div id="ayah-container" dir="rtl" class="font-arabic text-4xl my-6 flex flex-wrap justify-center gap-3">
+            <span class="cursor-pointer px-2 rounded">بِسْمِ</span>
+            <span class="cursor-pointer px-2 rounded">ٱللَّهِ</span>
+            <span class="cursor-pointer px-2 rounded">ٱلرَّحْمَـٰنِ</span>
+            <span class="cursor-pointer px-2 rounded">ٱلرَّحِيمِ</span>
+          </div>
+          <p id="tap-hint" class="text-xs text-gray-500 italic hidden">Klik pada kata berwarna untuk melihat koreksi makhraj & mad</p>
+        </div>
+
+        <!-- Detail Koreksi Kata -->
+        <div id="word-detail-box" class="hidden bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl text-sm">
+          <div class="font-bold text-amber-900" id="detail-title"></div>
+          <p class="text-amber-800 mt-1" id="detail-msg"></p>
+        </div>
+
+        <!-- Kartu Skor Multi-Layer -->
+        <div id="score-card" class="hidden bg-white border rounded-2xl p-4 shadow-sm">
+          <h3 class="text-sm font-bold text-gray-700 mb-3">Hasil Evaluasi AI Multi-Layer</h3>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="p-2 bg-green-50 rounded-xl">
+              <div id="score-lafaz" class="text-xl font-bold text-green-600">0%</div>
+              <div class="text-[11px] text-gray-600">Kelengkapan Lafaz</div>
+            </div>
+            <div class="p-2 bg-amber-50 rounded-xl">
+              <div id="score-tajweed" class="text-xl font-bold text-amber-600">0%</div>
+              <div class="text-[11px] text-gray-600">Tajwid & Makhraj</div>
+            </div>
+            <div class="p-2 bg-blue-50 rounded-xl">
+              <div id="score-rhythm" class="text-xl font-bold text-blue-600">0%</div>
+              <div class="text-[11px] text-gray-600">Kemiripan Irama</div>
+            </div>
+          </div>
+          <canvas id="pitchChart" class="mt-4" height="120"></canvas>
+        </div>
+
+        <!-- Tombol Rekam Voice Note -->
+        <div class="flex flex-col items-center pt-4">
+          <button id="record-btn" onclick="toggleRecording()" class="w-20 h-20 rounded-full bg-teal-700 hover:bg-teal-800 text-white flex items-center justify-center shadow-lg transition-all">
+            <svg class="w-9 h-9" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+          </button>
+          <span id="record-status" class="text-xs text-gray-600 mt-2 font-medium">Ketuk Mikrofon & Mulai Membaca</span>
+        </div>
+      </div>
+
+      <!-- TAB 2: BUKU MUTABA'AH -->
+      <div id="tab-mutabaah" class="hidden space-y-4">
+        <div class="bg-red-50 border border-red-200 p-3 rounded-xl">
+          <div class="text-xs font-bold text-red-700">MANZIL JATUH TEMPO HARI INI</div>
+          <div class="font-bold text-sm mt-1">QS. An-Naba : 1 - 30 (Hal 582)</div>
+          <div class="text-xs text-gray-600">Estimasi Daya Ingat: 61% • Wajib diulang sebelum Ziyadah</div>
+        </div>
+        <h3 class="font-bold text-sm text-gray-700">Peta Kekuatan Memori Juz 30 (Hal 582 - 604)</h3>
+        <div id="heatmap-grid" class="grid grid-cols-5 gap-2"></div>
+      </div>
+
+      <!-- TAB 3: MHQ AI BOT -->
+      <div id="tab-mhq" class="hidden space-y-4">
+        <div class="bg-white border rounded-2xl p-6 text-center shadow-sm">
+          <div class="text-xs text-gray-400">Sambungkan kelanjutan ayat berikut:</div>
+          <div id="mhq-prompt" dir="rtl" class="font-arabic text-3xl font-bold my-5">فَإِذَا فَرَغۡتَ فَٱنصَبۡ</div>
+          <div id="mhq-surah" class="text-xs text-teal-700 font-semibold">QS. Al-Insyirah : 7 - 8</div>
+          <div id="mhq-answer-box" class="hidden mt-4 pt-4 border-t">
+            <div class="text-xs text-green-600">Kunci Sambungan Ayat:</div>
+            <div id="mhq-answer" dir="rtl" class="font-arabic text-2xl font-bold text-green-700 mt-2">وَإِلَىٰ رَبِّكَ فَٱرۡغَبۡ</div>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="document.getElementById('mhq-answer-box').classList.remove('hidden')" class="flex-1 py-2.5 border border-teal-700 text-teal-700 rounded-xl text-sm font-semibold">Lihat Kunci</button>
+          <button onclick="nextMhqQuestion()" class="flex-1 py-2.5 bg-teal-700 text-white rounded-xl text-sm font-semibold">Soal Acak Baru</button>
+        </div>
+      </div>
+
+      <!-- TAB 4: PANEL MUQRI & CETAK PDF SANAD -->
+      <div id="tab-muqri" class="hidden space-y-4">
+        <div class="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
+          <h3 class="font-bold text-gray-800">Otorisasi Tashih Muqri' & Syahadah Sanad</h3>
+          <div>
+            <label class="text-xs text-gray-500">Nama Santri Penerima Ijazah (Mujaz)</label>
+            <input id="student-name" type="text" value="Ahmad Fauzi" class="w-full border rounded-xl p-2.5 mt-1 text-sm" />
+          </div>
+          <button onclick="downloadSanadPdf()" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow text-sm">
+            Tanda Tangani RSA-SHA256 & Unduh PDF Syahadah
+          </button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="border-t bg-white grid grid-cols-4 text-xs text-center py-2">
+      <button onclick="switchTab('setoran')" class="flex flex-col items-center text-teal-800 font-bold">
+        <span>🎙️</span><span>Setoran AI</span>
+      </button>
+      <button onclick="switchTab('mutabaah')" class="flex flex-col items-center text-gray-500">
+        <span>📊</span><span>Mutaba'ah</span>
+      </button>
+      <button onclick="switchTab('mhq')" class="flex flex-col items-center text-gray-500">
+        <span>🤖</span><span>MHQ Bot</span>
+      </button>
+      <button onclick="switchTab('muqri')" class="flex flex-col items-center text-gray-500">
+        <span>📜</span><span>Syahadah</span>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    let isRecording = false;
+    let mediaRecorder;
+    let audioChunks = [];
+    let chartInstance = null;
+
+    function switchTab(tab) {
+      ['setoran', 'mutabaah', 'mhq', 'muqri'].forEach(t => {
+        document.getElementById('tab-' + t).classList.add('hidden');
+      });
+      document.getElementById('tab-' + tab).classList.remove('hidden');
+      if (tab === 'mutabaah') loadHeatmap();
+    }
+
+    async function toggleRecording() {
+      const btn = document.getElementById('record-btn');
+      const status = document.getElementById('record-status');
+
+      if (!isRecording) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = sendAudioToBackend;
+        mediaRecorder.start();
+        isRecording = true;
+        btn.classList.replace('bg-teal-700', 'bg-red-600');
+        status.innerText = 'Sedang Merekam... Ketuk untuk Evaluasi AI';
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        btn.classList.replace('bg-red-600', 'bg-teal-700');
+        status.innerText = 'Menganalisis Lafaz, Makhraj, & Kontur Nada...';
+      }
+    }
+
+    async function sendAudioToBackend() {
+      const blob = new Blob(audioChunks, { type: 'audio/wav' });
+      const formData = new FormData();
+      formData.append('surah_id', '1');
+      formData.append('ayah_number', '1');
+      formData.append('audio_file', blob, 'setoran.wav');
+
+      const res = await fetch('/api/v1/evaluate-recitation', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      document.getElementById('record-status').innerText = 'Evaluasi Selesai. Ketuk kata berwarna untuk koreksi.';
+      document.getElementById('score-card').classList.remove('hidden');
+      document.getElementById('tap-hint').classList.remove('hidden');
+
+      document.getElementById('score-lafaz').innerText = data.scores.lafaz_accuracy + '%';
+      document.getElementById('score-tajweed').innerText = data.scores.tajweed_makhraj + '%';
+      document.getElementById('score-rhythm').innerText = data.scores.rhythm_similarity + '%';
+
+      // Render Kata Berwarna
+      const container = document.getElementById('ayah-container');
+      container.innerHTML = '';
+      data.word_by_word_feedback.forEach(w => {
+        const span = document.createElement('span');
+        span.innerText = w.text;
+        span.className = 'cursor-pointer px-2 rounded transition ' +
+          (w.status === 'correct' ? 'text-green-600' : w.status === 'warning' ? 'text-amber-600 underline decoration-wavy' : 'text-red-600 underline decoration-wavy');
+        span.onclick = () => {
+          const box = document.getElementById('word-detail-box');
+          box.classList.remove('hidden');
+          if (w.issues.length > 0) {
+            document.getElementById('detail-title').innerText = w.issues[0].ruleName;
+            document.getElementById('detail-msg').innerText = w.issues[0].message;
+          } else {
+            document.getElementById('detail-title').innerText = 'Bacaan Tepat (Mumtaz)';
+            document.getElementById('detail-msg').innerText = 'Makhraj dan panjang harakat pada kata ini sudah sesuai standar.';
+          }
+        };
+        container.appendChild(span);
+      });
+
+      // Render Grafik Pitch F0
+      const ctx = document.getElementById('pitchChart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.pitch_comparison.reference_semitones.map((_, i) => i + 1),
+          datasets: [
+            { label: 'Nada Syaikh Acuan', data: data.pitch_comparison.reference_semitones, borderColor: '#0d9488', tension: 0.4, pointRadius: 0 },
+            { label: 'Nada Suara Anda', data: data.pitch_comparison.user_semitones, borderColor: '#d97706', borderDash: [5, 5], tension: 0.4, pointRadius: 0 }
+          ]
+        },
+        options: { plugins: { legend: { labels: { boxWidth: 12, font: { size: 10 } } } }, scales: { y: { min: -5, max: 5 } } }
+      });
+    }
+
+    async function loadHeatmap() {
+      const res = await fetch('/api/v1/mutabaah/dashboard');
+      const data = await res.json();
+      const grid = document.getElementById('heatmap-grid');
+      grid.innerHTML = '';
+      data.juz_30_heatmap.forEach(p => {
+        const div = document.createElement('div');
+        const bg = p.stage === 'sanad_certified' ? 'bg-yellow-600 text-white' :
+                   p.stage === 'manzil_due' ? 'bg-red-600 text-white' :
+                   p.stage === 'manzil_active' ? 'bg-green-600 text-white' :
+                   p.stage === 'sabqi_phase' ? 'bg-amber-500 text-white' : 'bg-gray-200 text-gray-500';
+        div.className = `${bg} p-2 rounded-lg text-center text-xs font-bold`;
+        div.innerHTML = `Hal ${p.page}<br><span class="text-[10px] font-normal">${p.retention}%</span>`;
+        grid.appendChild(div);
+      });
+    }
+
+    async function nextMhqQuestion() {
+      const res = await fetch('/api/v1/mhq/next-question');
+      const d = await res.json();
+      document.getElementById('mhq-prompt').innerText = d.prompt_ayah;
+      document.getElementById('mhq-answer').innerText = d.expected_continuation;
+      document.getElementById('mhq-surah').innerText = d.surah_info;
+      document.getElementById('mhq-answer-box').classList.add('hidden');
+    }
+
+    async function downloadSanadPdf() {
+      const name = document.getElementById('student-name').value;
+      const res = await fetch('/api/v1/muqri/generate-sanad-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_name: name,
+          muqri_name: 'Ust. H. Abdul Hakim, Lc., M.A.',
+          scope_title: "Surat Al-Fatihah (Riwayat Hafs 'an 'Ashim)",
+          grade: 'MUMTAZ'
+        })
+      });
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Syahadah_Sanad_${name}.pdf`;
+      a.click();
+    }
+  </script>
+</body>
+</html>
