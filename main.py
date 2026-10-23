@@ -1,8 +1,10 @@
 ﻿import io, random, hashlib
+from pathlib import Path
 import numpy as np
 import qrcode
 from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
@@ -11,11 +13,20 @@ from reportlab.lib.utils import ImageReader
 
 app = FastAPI()
 
+# Aset statis: logo, ikon PWA/Android, manifest
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 HTML_PAGE = """<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tahfidz & Sanad AI</title>
+  <title>ITQAN AL-QUR'AN</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#062E1A">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&display=swap" rel="stylesheet">
@@ -23,9 +34,10 @@ HTML_PAGE = """<!DOCTYPE html>
 </head>
 <body class="bg-slate-200 flex justify-center min-h-screen">
   <div class="w-full max-w-md bg-white min-h-screen shadow-2xl flex flex-col justify-between">
-    <header class="bg-teal-800 text-white p-4">
-      <h1 class="text-lg font-bold">Tahfidz & Tahsin Sanad AI</h1>
-      <p class="text-xs text-teal-200">Qari Acuan: Syaikh Mahmud Khalil Al-Hushari (Riwayat Hafs)</p>
+    <header class="text-white px-4 py-3" style="background:linear-gradient(135deg,#062E1A 0%,#0B4A29 60%,#13603A 100%)">
+      <h1 class="sr-only">ITQAN AL-QUR'AN</h1>
+      <img src="/static/logo-horizontal-putih.png" alt="ITQAN AL-QUR'AN - Tahfidz, Tahsin, Sanad" class="h-11 w-auto">
+      <p class="text-xs text-amber-200 mt-1">Qari Acuan: Syaikh Mahmud Khalil Al-Hushari (Riwayat Hafs)</p>
     </header>
     <main class="flex-1 p-4 space-y-4 overflow-y-auto">
       <div id="tab-1" class="space-y-4">
@@ -149,6 +161,14 @@ async function unduhPdf() {
 async def home():
     return HTML_PAGE
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse(STATIC_DIR / "favicon.ico")
+
+@app.get("/manifest.json", include_in_schema=False)
+async def manifest():
+    return FileResponse(STATIC_DIR / "manifest.json", media_type="application/manifest+json")
+
 @app.post("/api/v1/evaluate-recitation")
 async def eval_audio(audio_file: UploadFile = File(...)):
     ref = (np.sin(np.linspace(0, 10, 25)) * 2.0).round(2).tolist()
@@ -203,6 +223,10 @@ async def pdf(nama: str = "Ahmad Fauzi"):
     c.drawImage(ImageReader(qbuf), 60, 50, width=90, height=90)
     c.setFont("Courier", 9)
     c.drawString(165, 95, f"SHA-256 Digital Signature: {sha[:42]}...")
+    c.drawImage(str(STATIC_DIR / "mark-transparan.png"), w - 150, h - 150, width=100, height=100, mask="auto")
+    c.setFont("Helvetica-Bold", 10)
+    c.setFillColor(colors.HexColor("#0B4A29"))
+    c.drawRightString(w - 60, 60, "Diterbitkan melalui aplikasi ITQAN AL-QUR'AN")
     c.showPage()
     c.save()
     buf.seek(0)
